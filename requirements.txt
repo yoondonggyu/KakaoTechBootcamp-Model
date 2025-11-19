@@ -1,9 +1,20 @@
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-pydantic==2.5.3
-keras==2.15.0
-tensorflow==2.15.0
-pillow==10.2.0
-numpy==1.26.3
-python-multipart==0.0.6
+# Python 3.13.5
+
+# FastAPI 및 웹 프레임워크
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.3
+python-multipart>=0.0.6
+
+# 이미지 처리
+pillow>=10.2.0
+numpy>=1.26.3
+
+# 딥러닝 (선택적 - 이미지 분류 모델용)
+# keras>=2.15.0
+# tensorflow>=2.15.0
+
+# 개발 도구 (선택)
+# pytest>=7.4.0
+# httpx>=0.25.0
 
