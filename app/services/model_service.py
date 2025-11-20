@@ -17,6 +17,10 @@ def load_ai_model():
     """Load model and labels into global variables."""
     global MODEL, CLASS_NAMES
     try:
+        # TensorFlow를 먼저 import하여 백엔드 초기화
+        import tensorflow as tf
+        print(f"TensorFlow 버전: {tf.__version__}")
+        
         from keras.models import load_model
         print(f"Loading model from {MODEL_PATH}...")
         MODEL = load_model(MODEL_PATH, compile=False)
@@ -25,11 +29,16 @@ def load_ai_model():
         with open(LABELS_PATH, "r") as f:
             CLASS_NAMES = [line.strip() for line in f.readlines()]
             
-        print("Model and labels loaded successfully.")
+        print("✅ Model and labels loaded successfully.")
+    except ImportError as e:
+        print(f"❌ Import 에러: {e}")
+        print("TensorFlow/Keras가 설치되어 있는지 확인하세요: pip install tensorflow-macos tensorflow-metal keras")
+        MODEL = None
+        CLASS_NAMES = []
     except Exception as e:
-        print(f"Error loading model: {e}")
-        # We don't raise here to allow app to start, but prediction will fail
-        pass
+        print(f"❌ 모델 로딩 에러: {e}")
+        MODEL = None
+        CLASS_NAMES = []
 
 def predict_image(image_file) -> dict:
     """

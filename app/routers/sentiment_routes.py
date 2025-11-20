@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from app.services.sentiment_service import SentimentAnalysisService, get_sentiment_service
 from app.core.exceptions import bad_request, unprocessable
 
-router = APIRouter(tags=["sentiment"])
+router = APIRouter()
 
 
 class SentimentRequest(BaseModel):

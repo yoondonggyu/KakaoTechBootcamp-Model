@@ -11,15 +11,15 @@ from app.services.sentiment_service import get_sentiment_service
 async def lifespan(app: FastAPI):
     # Load image classification model on startup
     try:
-        # load_ai_model()
-        print("✅ Image classification model loading SKIPPED for debugging")
+        load_ai_model()
+        print("✅ Image classification model loaded")
     except Exception as e:
         print(f"⚠️  WARNING: Failed to load image classification model: {e}")
     
     # Load sentiment analysis model on startup
     try:
-        # get_sentiment_service()
-        print("✅ Sentiment analysis model loading SKIPPED for debugging")
+        get_sentiment_service()
+        print("✅ Sentiment analysis model loaded")
     except Exception as e:
         print(f"⚠️  WARNING: Failed to load sentiment analysis model: {e}")
     

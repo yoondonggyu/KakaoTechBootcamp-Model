@@ -3,7 +3,7 @@ from app.services.model_service import predict_image
 from app.schemas.prediction import PredictionResponse
 from app.core.exceptions import bad_request
 
-router = APIRouter(tags=["predict"])
+router = APIRouter()
 
 @router.post("/predict", response_model=PredictionResponse)
 async def predict(file: UploadFile = File(...)):
