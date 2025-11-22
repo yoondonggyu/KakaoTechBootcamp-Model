@@ -35,32 +35,44 @@ FASTAPI_Project_model/
 
 ### 1. 가상환경 활성화
 ```bash
-conda activate env_fastapi
+conda activate env_python310
 ```
 
 ### 2. 필요한 패키지 설치
 ```bash
-pip install fastapi uvicorn keras tensorflow pillow numpy ollama
+# requirements.txt 사용 (권장)
+pip install -r requirements.txt
+
+# 또는 개별 설치
+pip install fastapi uvicorn tensorflow tensorflow-macos tensorflow-metal keras pillow numpy ollama python-multipart
 ```
 
 **참고**: 
-- Python 3.10 환경 권장
-- macOS에서 TensorFlow 사용 시: `pip install tensorflow-macos tensorflow-metal`
+- Python 3.10 환경 사용 (`env_python310`)
+- macOS에서 TensorFlow 사용 시: `tensorflow-macos`와 `tensorflow-metal` 설치 필요
 - Ollama는 별도로 설치 및 실행되어야 합니다 (https://ollama.ai)
 
 ### 3. 서버 실행
 ```bash
 cd /Users/yoon-dong-gyu/kakao_bootcamp/FASTAPI_Project_model
-uvicorn app.main:app --reload --port 8001
+
+# macOS에서 TensorFlow 사용 시 환경 변수 설정 (필수)
+export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+
+# 서버 실행 (기본 포트: 8502)
+uvicorn app.main:app --host 0.0.0.0 --port 8502
 ```
 
-서버가 `http://localhost:8001`에서 실행됩니다.
+**참고**:
+- 기본 포트는 **8502**입니다 (Backend API는 8001, Streamlit은 8501 사용)
+- `--reload` 옵션은 macOS에서 mutex lock 에러를 유발할 수 있으므로 프로덕션에서는 제외 권장
+- 서버가 `http://localhost:8502`에서 실행됩니다
 
 ## API 테스트
 
 ### 1. 헬스 체크
 ```bash
-curl http://localhost:8001/
+curl http://localhost:8502/
 ```
 
 **응답 예시:**
@@ -81,7 +93,7 @@ curl http://localhost:8001/
 
 #### curl로 테스트
 ```bash
-curl -X POST "http://localhost:8001/api/predict" \
+curl -X POST "http://localhost:8502/api/predict" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@/path/to/your/dog_or_cat_image.jpg"
 ```
@@ -89,19 +101,19 @@ curl -X POST "http://localhost:8001/api/predict" \
 **실제 예시 (프로젝트 내 이미지 사용):**
 ```bash
 # 9week 디렉터리의 고양이 이미지로 테스트
-curl -X POST "http://localhost:8001/api/predict" \
+curl -X POST "http://localhost:8502/api/predict" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@/Users/yoon-dong-gyu/kakao_bootcamp/9week(20251110~20251115)/cls_cats_and_dogs/cat/cat.1.jpg"
 
 # 강아지 이미지로 테스트
-curl -X POST "http://localhost:8001/api/predict" \
+curl -X POST "http://localhost:8502/api/predict" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@/Users/yoon-dong-gyu/kakao_bootcamp/9week(20251110~20251115)/cls_cats_and_dogs/dog/dog.1.jpg"
 ```
 
 #### Postman으로 테스트
 1. **Method**: POST
-2. **URL**: `http://localhost:8001/api/predict`
+2. **URL**: `http://localhost:8502/api/predict`
 3. **Body 탭**: `form-data` 선택
 4. **Key**: `file` (Type을 File로 변경)
 5. **Value**: 강아지 또는 고양이 이미지 파일 선택
@@ -129,7 +141,7 @@ curl -X POST "http://localhost:8001/api/predict" \
 #### curl로 테스트
 ```bash
 # 기본 감성 분석 (토큰 영향도 제외)
-curl -X POST "http://localhost:8001/api/sentiment" \
+curl -X POST "http://localhost:8502/api/sentiment" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "I really love this camera, the picture quality is amazing!",
@@ -137,7 +149,7 @@ curl -X POST "http://localhost:8001/api/sentiment" \
   }'
 
 # 토큰 영향도 포함
-curl -X POST "http://localhost:8001/api/sentiment" \
+curl -X POST "http://localhost:8502/api/sentiment" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "This is the worst product ever, totally disappointed",
@@ -147,7 +159,7 @@ curl -X POST "http://localhost:8001/api/sentiment" \
 
 #### Postman으로 테스트
 1. **Method**: POST
-2. **URL**: `http://localhost:8001/api/sentiment`
+2. **URL**: `http://localhost:8502/api/sentiment`
 3. **Body 탭**: `raw` 선택, `JSON` 타입 선택
 4. **Body 내용**:
 ```json
@@ -209,7 +221,7 @@ curl -X POST "http://localhost:8001/api/sentiment" \
 
 #### curl로 테스트
 ```bash
-curl -X POST "http://localhost:8001/api/chat" \
+curl -X POST "http://localhost:8502/api/chat" \
   -H "Content-Type: application/json" \
   -d '{
     "message": "Hello, how are you?",
@@ -230,7 +242,7 @@ curl -X POST "http://localhost:8001/api/chat" \
 
 #### Postman으로 테스트
 1. **Method**: POST
-2. **URL**: `http://localhost:8001/api/chat`
+2. **URL**: `http://localhost:8502/api/chat`
 3. **Body 탭**: `raw` 선택, `JSON` 타입 선택
 4. **Body 내용**:
 ```json
@@ -250,7 +262,7 @@ curl -X POST "http://localhost:8001/api/chat" \
 
 #### 이미지 분류 - 파일 없이 요청
 ```bash
-curl -X POST "http://localhost:8001/api/predict"
+curl -X POST "http://localhost:8502/api/predict"
 ```
 
 **응답 (422 Unprocessable Entity):**
@@ -265,7 +277,7 @@ curl -X POST "http://localhost:8001/api/predict"
 
 #### 이미지 분류 - 잘못된 파일 형식
 ```bash
-curl -X POST "http://localhost:8001/api/predict" \
+curl -X POST "http://localhost:8502/api/predict" \
   -F "file=@/path/to/document.pdf"
 ```
 
@@ -281,7 +293,7 @@ curl -X POST "http://localhost:8001/api/predict" \
 
 #### 감성 분석 - 빈 텍스트
 ```bash
-curl -X POST "http://localhost:8001/api/sentiment" \
+curl -X POST "http://localhost:8502/api/sentiment" \
   -H "Content-Type: application/json" \
   -d '{"text": "", "explain": false}'
 ```
@@ -296,7 +308,7 @@ curl -X POST "http://localhost:8001/api/sentiment" \
 
 #### 감성 분석 - 알파벳 없는 텍스트
 ```bash
-curl -X POST "http://localhost:8001/api/sentiment" \
+curl -X POST "http://localhost:8502/api/sentiment" \
   -H "Content-Type: application/json" \
   -d '{"text": "123 456", "explain": false}'
 ```
@@ -312,8 +324,8 @@ curl -X POST "http://localhost:8001/api/sentiment" \
 ## API 문서
 
 서버 실행 후 다음 URL에서 자동 생성된 API 문서를 확인할 수 있습니다:
-- Swagger UI: http://localhost:8001/docs
-- ReDoc: http://localhost:8001/redoc
+- Swagger UI: http://localhost:8502/docs
+- ReDoc: http://localhost:8502/redoc
 
 ## 주요 기능
 
@@ -351,8 +363,12 @@ curl -X POST "http://localhost:8001/api/sentiment" \
 - Keras/TensorFlow가 설치되어 있는지 확인: `pip list | grep -i keras`
 
 ### 포트 충돌
-- 백엔드 서버가 8000번 포트를 사용하고 있으므로, 모델 서버는 8001번 포트 사용
-- 다른 포트로 변경하려면: `uvicorn app.main:app --reload --port 원하는포트번호`
+- **현재 포트 구성**:
+  - Backend API: 8001
+  - Model API: 8502
+  - Streamlit: 8501
+- 다른 포트로 변경하려면: `uvicorn app.main:app --host 0.0.0.0 --port 원하는포트번호`
+- Backend API가 Model API 포트를 자동 감지하므로, 포트 변경 시 Backend 재시작 필요
 
 ### 이미지 업로드 오류
 - 파일 크기가 너무 크지 않은지 확인
