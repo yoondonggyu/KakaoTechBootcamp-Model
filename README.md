@@ -1,8 +1,9 @@
 # AI Model Serving API
 
-두 가지 AI 모델을 FastAPI로 서빙하는 프로젝트입니다:
+세 가지 AI 모델을 FastAPI로 서빙하는 프로젝트입니다:
 1. **이미지 분류 모델**: Keras 기반 강아지/고양이 분류
 2. **감성 분석 모델**: Naive Bayes 기반 텍스트 감성 분석 (positive/negative)
+3. **채팅 모델**: Ollama 기반 LLM 채팅 (gemma3:4b 등)
 
 ## 프로젝트 구조
 
@@ -12,10 +13,12 @@ FASTAPI_Project_model/
 │   ├── main.py                     # FastAPI 앱 진입점
 │   ├── routers/
 │   │   ├── predict_routes.py       # 이미지 분류 API 라우터
-│   │   └── sentiment_routes.py     # 감성 분석 API 라우터
+│   │   ├── sentiment_routes.py     # 감성 분석 API 라우터
+│   │   └── chat_routes.py          # 채팅 API 라우터
 │   ├── services/
 │   │   ├── model_service.py        # 이미지 분류 모델 서비스
-│   │   └── sentiment_service.py    # 감성 분석 모델 서비스
+│   │   ├── sentiment_service.py    # 감성 분석 모델 서비스
+│   │   └── chat_service.py         # 채팅 모델 서비스 (Ollama)
 │   ├── schemas/
 │   │   └── prediction.py           # Pydantic 응답 스키마
 │   └── core/
@@ -37,8 +40,13 @@ conda activate env_fastapi
 
 ### 2. 필요한 패키지 설치
 ```bash
-pip install fastapi uvicorn keras tensorflow pillow numpy
+pip install fastapi uvicorn keras tensorflow pillow numpy ollama
 ```
+
+**참고**: 
+- Python 3.10 환경 권장
+- macOS에서 TensorFlow 사용 시: `pip install tensorflow-macos tensorflow-metal`
+- Ollama는 별도로 설치 및 실행되어야 합니다 (https://ollama.ai)
 
 ### 3. 서버 실행
 ```bash
@@ -63,6 +71,7 @@ curl http://localhost:8001/
   "endpoints": {
     "image_classification": "/api/predict (POST)",
     "sentiment_analysis": "/api/sentiment (POST)",
+    "chat": "/api/chat (POST)",
     "documentation": "/docs"
   }
 }
@@ -182,7 +191,62 @@ curl -X POST "http://localhost:8001/api/sentiment" \
 }
 ```
 
-### 4. 예외 처리 테스트
+### 4. 채팅 API (Ollama)
+
+#### 사전 요구사항
+1. **Ollama 설치 및 실행**
+   ```bash
+   # Ollama 설치 (https://ollama.ai)
+   # 모델 다운로드
+   ollama pull gemma3:4b
+   ```
+
+2. **Ollama 서버 실행 확인**
+   ```bash
+   # 기본 포트: 11434
+   curl http://localhost:11434/api/tags
+   ```
+
+#### curl로 테스트
+```bash
+curl -X POST "http://localhost:8001/api/chat" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Hello, how are you?",
+    "model": "gemma3:4b"
+  }'
+```
+
+**응답 형식 (NDJSON 스트리밍):**
+```json
+{"type": "thinking_start"}
+{"type": "thinking", "content": "..."}
+{"type": "thinking_end"}
+{"type": "content", "content": "Hello"}
+{"type": "content", "content": "!"}
+{"type": "content", "content": " I"}
+...
+```
+
+#### Postman으로 테스트
+1. **Method**: POST
+2. **URL**: `http://localhost:8001/api/chat`
+3. **Body 탭**: `raw` 선택, `JSON` 타입 선택
+4. **Body 내용**:
+```json
+{
+  "message": "What is machine learning?",
+  "model": "gemma3:4b"
+}
+```
+5. **Send** 클릭
+
+**참고**: 
+- 응답은 스트리밍 형식(NDJSON)으로 전송됩니다
+- `model` 파라미터는 선택사항이며, 기본값은 `"gemma3:4b"`입니다
+- Ollama 서버가 실행되지 않으면 연결 오류가 발생합니다
+
+### 5. 예외 처리 테스트
 
 #### 이미지 분류 - 파일 없이 요청
 ```bash
@@ -266,6 +330,13 @@ curl -X POST "http://localhost:8001/api/sentiment" \
 - ✅ 토큰별 영향도 분석 (옵션)
 - ✅ 입력 검증 (빈 텍스트, 알파벳 포함 여부)
 
+### 채팅 모델 (Ollama)
+- ✅ Ollama LLM 통합 (gemma3:4b 등)
+- ✅ 스트리밍 응답 지원 (NDJSON 형식)
+- ✅ Thinking 과정 포함 (모델 지원 시)
+- ✅ 비동기 스트리밍 처리
+- ✅ 다양한 모델 선택 가능
+
 ### 공통 기능
 - ✅ 일관된 JSON 응답 포맷
 - ✅ Pydantic 스키마 검증
@@ -286,4 +357,10 @@ curl -X POST "http://localhost:8001/api/sentiment" \
 ### 이미지 업로드 오류
 - 파일 크기가 너무 크지 않은지 확인
 - 파일 형식이 jpg, png, jpeg 중 하나인지 확인
+
+### Ollama 연결 오류
+- Ollama 서버가 실행 중인지 확인: `curl http://localhost:11434/api/tags`
+- 필요한 모델이 다운로드되었는지 확인: `ollama list`
+- 모델이 없으면 다운로드: `ollama pull gemma3:4b`
+- macOS에서 mutex lock 에러 발생 시: `export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES`
 
