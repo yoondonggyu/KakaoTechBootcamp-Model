@@ -25,6 +25,8 @@ venv/
 ENV/
 env/
 .venv
+.env
+.*
 
 # IDE
 .vscode/
@@ -51,4 +53,5 @@ logs/
 # Database
 *.db
 *.sqlite3
+
 

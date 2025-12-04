@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from app.routers import predict_routes, sentiment_routes, chat_routes
+from app.routers import predict_routes, sentiment_routes, chat_routes, summarization_routes, tagging_routes, embedding_routes
 from app.core.exceptions import APIError, api_error_handler, RequestValidationError, validation_error_handler, global_exception_handler
 from app.services.model_service import load_ai_model
 from app.services.sentiment_service import get_sentiment_service
@@ -10,18 +11,18 @@ from app.services.sentiment_service import get_sentiment_service
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Load image classification model on startup
-    try:
-        load_ai_model()
-        print("✅ Image classification model loaded")
-    except Exception as e:
-        print(f"⚠️  WARNING: Failed to load image classification model: {e}")
+    # try:
+    #     load_ai_model()
+    #     print("✅ Image classification model loaded")
+    # except Exception as e:
+    #     print(f"⚠️  WARNING: Failed to load image classification model: {e}")
     
     # Load sentiment analysis model on startup
-    try:
-        get_sentiment_service()
-        print("✅ Sentiment analysis model loaded")
-    except Exception as e:
-        print(f"⚠️  WARNING: Failed to load sentiment analysis model: {e}")
+    # try:
+    #     get_sentiment_service()
+    #     print("✅ Sentiment analysis model loaded")
+    # except Exception as e:
+    #     print(f"⚠️  WARNING: Failed to load sentiment analysis model: {e}")
     
     yield
     # Clean up if needed
@@ -33,10 +34,22 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# CORS 설정
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Register Routers
 app.include_router(predict_routes.router, prefix="/api", tags=["Image Classification"])
 app.include_router(sentiment_routes.router, prefix="/api", tags=["Sentiment Analysis"])
 app.include_router(chat_routes.router, prefix="/api", tags=["Chat"])
+app.include_router(summarization_routes.router, prefix="/api", tags=["Summarization"])
+app.include_router(tagging_routes.router, prefix="/api", tags=["Auto Tagging"])
+app.include_router(embedding_routes.router, prefix="/api", tags=["Embedding"])
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
